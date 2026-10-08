@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>StudyShelf</title>
+<meta name="description" content="StudyShelf — a clean digital library of browser games.">
+<style>
+:root{
+  --bg:#f5f6f8;--card:#fff;--text:#17191c;--muted:#6b7078;
+  --line:#e5e7eb;--blue:#4169e1;--blue2:#3157c7;
+}
+*{box-sizing:border-box}
+body{margin:0;font-family:Inter,Arial,sans-serif;background:var(--bg);color:var(--text)}
+button,input{font:inherit}
+.app{max-width:1280px;margin:auto;padding:28px 24px 50px}
+header{display:flex;align-items:center;justify-content:space-between;margin-bottom:28px}
+.logo{font-size:24px;font-weight:750;letter-spacing:-.5px}
+.tagline{color:var(--muted);font-size:13px}
+.search{margin-bottom:28px}
+.search input{width:100%;padding:16px 18px;border:1px solid #dfe2e6;border-radius:12px;background:#fff;outline:none;font-size:16px}
+.search input:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(65,105,225,.1)}
+.section-title{font-size:22px;margin:0 0 16px}
+.grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:20px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:13px;overflow:hidden;transition:.15s}
+.card:hover{transform:translateY(-3px);box-shadow:0 7px 20px rgba(0,0,0,.08)}
+.thumb{width:100%;aspect-ratio:16/9;object-fit:cover;background:#e9ebef;display:block}
+.info{padding:14px}
+.title{margin:0 0 6px;font-size:17px}
+.desc{margin:0 0 14px;color:var(--muted);font-size:13px;line-height:1.4;min-height:36px}
+.play{width:100%;border:0;border-radius:8px;padding:10px;background:var(--blue);color:#fff;font-weight:650;cursor:pointer}
+.play:hover{background:var(--blue2)}
+.empty{text-align:center;padding:50px;color:var(--muted)}
+.player{display:none}
+.playerbar{display:flex;align-items:center;gap:14px;margin-bottom:15px}
+.back{border:0;border-radius:8px;padding:9px 14px;background:#e5e7eb;cursor:pointer}
+.back:hover{background:#d9dce1}
+.player h2{margin:0;font-size:21px}
+.frame-wrap{background:#000;border-radius:12px;overflow:hidden}
+iframe{display:block;width:100%;height:72vh;min-height:520px;border:0}
+.note{font-size:12px;color:var(--muted);margin-top:10px}
+@media(max-width:1000px){.grid{grid-template-columns:repeat(3,1fr)}}
+@media(max-width:720px){.grid{grid-template-columns:repeat(2,1fr)}.tagline{display:none}}
+@media(max-width:520px){.app{padding:20px 14px}.grid{grid-template-columns:1fr}iframe{min-height:460px}}
+</style>
+</head>
+<body>
+<div class="app">
+<header>
+  <div class="logo">StudyShelf</div>
+  <div class="tagline">A digital library</div>
+</header>
+
+<main id="library">
+  <div class="search">
+    <input id="search" type="search" placeholder="Search the library..." autocomplete="off">
+  </div>
+  <h1 class="section-title">Library</h1>
+  <div id="grid" class="grid"></div>
+  <div id="empty" class="empty" hidden>No games found.</div>
+</main>
+
+<section id="player" class="player">
+  <div class="playerbar">
+    <button class="back" id="back">← Back to Library</button>
+    <h2 id="playerTitle"></h2>
+  </div>
+  <div class="frame-wrap">
+    <iframe id="frame" allow="autoplay; fullscreen; gamepad" allowfullscreen scrolling="no"></iframe>
+  </div>
+  <div class="note">If a game doesn't load, its provider may restrict embedding.</div>
+</section>
+</div>
+
+<script>
+const games = [
+  {
+    name:"Slope",
+    description:"Race down a fast, endless 3D course and try not to fall.",
+    thumbnail:"https://img.poki.com/cdn-cgi/image/quality=78,width=640,height=360,fit=cover,f=auto/https://img.poki.com/cdn-cgi/image/quality=78,width=640,height=360/https://games.poki.com/asset/slope.png",
+    embed:"https://gamezipper.com/games/slope/"
+  },
+  {
+    name:"Fireboy & Watergirl 2",
+    description:"Work together through puzzles, traps, switches, and obstacles.",
+    thumbnail:"https://img.poki.com/cdn-cgi/image/quality=78,width=640,height=360,fit=cover,f=auto/https://img.poki.com/",
+    embed:"https://html5.gamedistribution.com/383ad09b92c7446b9113cccc29630517/"
+  },
+  {
+    name:"Stick War Legacy",
+    description:"Build your army, command units, and conquer enemy territories.",
+    thumbnail:"https://www.madkidgames.com/games/stick-war-legacy/thumb_2.jpg",
+    embed:"https://www.madkidgames.com/full/stick-war-legacy"
+  },
+  {
+    name:"Bowmasters",
+    description:"Aim carefully, launch projectiles, and defeat your opponents.",
+    thumbnail:"https://www.madkidgames.com/games/bowmasters-archery-shooting/thumb_2.jpg",
+    embed:"https://www.madkidgames.com/full/bowmasters-archery-shooting"
+  },
+  {
+    name:"Subway Surfers",
+    description:"Dodge trains, collect coins, and race for the highest score.",
+    thumbnail:"https://www.madkidgames.com/games/subway-surfers/thumb_2.jpg",
+    embed:"https://www.madkidgames.com/full/subway-surfers"
+  },
+  {
+    name:"Angry Birds 2",
+    description:"Launch birds, smash structures, and take down the pigs.",
+    thumbnail:"https://www.madkidgames.com/games/angry-birds-2/thumb_2.jpg",
+    embed:"https://www.madkidgames.com/full/angry-birds-2"
+  },
+  {
+    name:"Bad Piggies",
+    description:"Build bizarre vehicles and get the pigs where they need to go.",
+    thumbnail:"https://www.madkidgames.com/games/bad-piggies/thumb_2.jpg",
+    embed:"https://www.madkidgames.com/full/bad-piggies"
+  },
+  {
+    name:"Offroad Outlaws",
+    description:"Take off-road vehicles across rough terrain and trails.",
+    thumbnail:"https://www.madkidgames.com/games/offroad-outlaws/thumb_2.jpg",
+    embed:"https://www.madkidgames.com/full/offroad-outlaws"
+  },
+  {
+    name:"Geometry Dash",
+    description:"Jump, fly, dodge spikes, and survive rhythm-based levels.",
+    thumbnail:"https://www.madkidgames.com/games/geometry-dash/thumb_2.jpg",
+    embed:"https://www.madkidgames.com/full/geometry-dash"
+  },
+  {
+    name:"Granny",
+    description:"Escape the house while solving puzzles and avoiding Granny.",
+    thumbnail:"https://www.madkidgames.com/games/granny/thumb_2.jpg",
+    embed:"https://www.madkidgames.com/full/granny"
+  },
+  {
+    name:"Demolition Derby 2",
+    description:"Crash, smash, and survive chaotic demolition derbies.",
+    thumbnail:"https://www.madkidgames.com/games/demolition-derby-2/thumb_2.jpg",
+    embed:"https://www.madkidgames.com/full/demolition-derby-2"
+  },
+  {
+    name:"Hot Wheels Race Off",
+    description:"Race Hot Wheels vehicles across stunt-filled tracks.",
+    thumbnail:"https://www.madkidgames.com/games/hot-wheels-race-off-multiplayer/thumb_2.jpg",
+    embed:"https://www.madkidgames.com/full/hot-wheels-race-off-multiplayer"
+  }
+];
+
+const grid=document.getElementById("grid"), empty=document.getElementById("empty");
+const search=document.getElementById("search"), library=document.getElementById("library");
+const player=document.getElementById("player"), frame=document.getElementById("frame");
+const playerTitle=document.getElementById("playerTitle");
+
+function render(list){
+  grid.innerHTML="";
+  empty.hidden=list.length!==0;
+  list.forEach(game=>{
+    const card=document.createElement("article");
+    card.className="card";
+    card.innerHTML=`
+      <img class="thumb" src="${game.thumbnail}" alt="${game.name}" loading="lazy"
+           onerror="this.style.visibility='hidden'">
+      <div class="info">
+        <h2 class="title">${game.name}</h2>
+        <p class="desc">${game.description}</p>
+        <button class="play">Play Game</button>
+      </div>`;
+    card.querySelector(".play").onclick=()=>play(game);
+    grid.appendChild(card);
+  });
+}
+function play(game){
+  library.style.display="none";
+  player.style.display="block";
+  playerTitle.textContent=game.name;
+  frame.src=game.embed;
+  window.scrollTo({top:0,behavior:"smooth"});
+}
+function back(){
+  frame.src="";
+  player.style.display="none";
+  library.style.display="block";
+  window.scrollTo({top:0,behavior:"smooth"});
+}
+search.addEventListener("input",()=>{
+  const q=search.value.toLowerCase().trim();
+  render(games.filter(g=>(g.name+" "+g.description).toLowerCase().includes(q)));
+});
+document.getElementById("back").onclick=back;
+render(games);
+</script>
+</body>
+</html>
